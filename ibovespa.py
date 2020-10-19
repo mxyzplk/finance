@@ -1,33 +1,60 @@
+# This project aims to collect and use stocks historical data from the Bovespa Index, 
+# he benchmark index of about 70 stocks[1] that are traded on the 
+# B3 (Brasil Bolsa Balcão), which account for the majority of trading and 
+# market capitalization in the Brazilian stock market.
+#
+# Given a certain period of time, the code searchs for each day's data and stores
+# it. The code also validates which data file is valid for use and store the data
+# in a list.
+# 
+# WIP 
+#
 import numpy as np
 import datetime
 import requests
 import os
 import zipfile
+import mysql.connector as mysql
 
 class data():
     def __init__(self, t1, t2, workdir):  #day/month/year
         self.dates = data.tdata(t1, t2)
         self.filenames = data.download(self.dates, workdir)
         self.data = data.readdata(self.filenames, workdir)
+        #db = mysql.connect(
+        #    host = "localhost",
+        #    user = "root",
+        #    passwd = "dbms"
+        #)
+        #cursor = db.cursor()
+        #cursor.execute("CREATE DATABASE datacamp")
+        #databases = cursor.fetchall()
+        #print(databases)
 
     @classmethod
     def readdata(cls, filenames, workdir):
         nfiles = len(filenames)
+        d = []
         for i in range(nfiles):
-            if filenames[i,1] == "Available":
-                zip = zipfile.ZipFile(filenames[i,0])
-                zip.extract(workdir)
-                raw = filenames[i,0]
+            if filenames[i][1] == "Available":
+                zip = zipfile.ZipFile(filenames[i][0])
+                raw = filenames[i][0]
                 raw = raw.replace("ZIP","TXT")
+                try:
+                    os.remove(workdir,raw)
+                except:
+                    pass
+                zip.extractall(workdir)
                 nlines = sum(1 for line in open(raw))
                 f = open(raw, "r")
                 for j in range(nlines):
                     line = f.readline()
                     if (j > 0):
-                        pass
+                        d.append(data.splitline(line))
     
+    @staticmethod
     def splitline(line):
-        data = []
+        d = []
         tipo_de_pregao = line[0:2]
         codigo_bdi = line[10:12]
         codigo_negociacao = line[12:24]
@@ -53,7 +80,56 @@ class data():
         preco_exercicio_pts = line[217:230]
         codigo_papel_isin = line[230:242]
         num_distribuicao_pappel = line[242:245]
-        data.append([])     
+        d.append([tipo_de_pregao,
+                    codigo_bdi,
+                    codigo_negociacao,
+                    tipo_de_mercado,
+                    nome_empresa,
+                    especificao_papel,
+                    prazo_mercado_termo,
+                    moeda_ref,
+                    prec_abertura,
+                    prec_maximo,
+                    prec_minimo,
+                    prec_medio,
+                    prec_ult,
+                    preco_melhor_oferta_compra,
+                    preco_melhor_oferta_venda,
+                    num_negociacoes,
+                    num_titulos_negociados,
+                    vol_titulos_negociados,
+                    preco_exercicio,
+                    indicador_de_correcao,
+                    data_vencimento,
+                    fator_cotacao,
+                    preco_exercicio_pts,
+                    codigo_papel_isin,
+                    num_distribuicao_pappel,
+                    codigo_bdi,
+                    codigo_negociacao,
+                    tipo_de_mercado,
+                    nome_empresa,
+                    especificao_papel,
+                    prazo_mercado_termo,
+                    moeda_ref,
+                    prec_abertura,
+                    prec_maximo,
+                    prec_minimo,
+                    prec_medio,
+                    prec_ult,
+                    preco_melhor_oferta_compra,
+                    preco_melhor_oferta_venda,
+                    num_negociacoes,
+                    num_titulos_negociados,
+                    vol_titulos_negociados,
+                    preco_exercicio,
+                    indicador_de_correcao,
+                    data_vencimento,
+                    fator_cotacao,
+                    preco_exercicio_pts,
+                    codigo_papel_isin,
+                    num_distribuicao_pappel]) 
+        return d    
                 
 
 
